@@ -1,0 +1,36 @@
+#!/usr/local/bin/bash
+# I use this on my pfsense box
+# I had to install vnstat, curl, and bash
+# you should run this from cron every 5 min or so
+# here is an example crontab line
+# */5 * * * * /root/bin/bw_monitor >/dev/null 2>&1 
+
+NUMBER=$(vnstat -i em0 -s | awk '/today/ {print $(NF-1)}')
+LABEL=$(vnstat -i em0 -s | awk '/today/ {print $NF}')
+DAILY_QUOTA=6
+DOUBLE_QUOTA=$((DAILY_QUOTA*2))
+
+# you need to setup a ifttt recipe to take this event and create an 
+# email or notification
+IFKEY="<put your key in here>"
+IF_POST="https://maker.ifttt.com/trigger/bandwidth_alert/with/key/${IFKEY}"
+
+#ignore if we are in MiB, doesn't handle TiB yet
+if [ "${LABEL}" == "GiB" ]; then
+
+   #uh oh we are over quota
+   if [ "${NUMBER}" -gt "${DAILY_QUOTA}" ]; then
+        VALUE="You have exceeded your daily bandwidth quota (${NUMBER} GB)"
+   fi
+
+   #uh oh we are double over quota!!
+   if [ "${NUMBER}" -gt "${DOUBLE_QUOTA}" ]; then
+        VALUE="You have exceeded twice your daily bandwidth quota (${NUMBER} GB)"
+   fi
+
+   #ALERT!
+   if [ ! -z "${VALUE}" ]; then
+	/usr/local/bin/curl -i -H "Content-Type: application/json" \
+	    -X POST --data "{\"value1\" : \"${VALUE}\"}" "${IF_POST}"
+   fi
+fi #end GB check
