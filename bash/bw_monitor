@@ -8,15 +8,30 @@
 NUMBER=$(vnstat -i em0 -s | awk '/today/ {print $(NF-1)}')
 LABEL=$(vnstat -i em0 -s | awk '/today/ {print $NF}')
 DAILY_QUOTA=6
-DOUBLE_QUOTA=$((DAILY_QUOTA*2))
 
 # you need to setup a ifttt recipe to take this event and create an 
 # email or notification
 IFKEY="<put your key in here>"
+
+while getopts k:q: f
+do
+    case "${f}" in
+    k) IFKEY="${OPTARG}"
+    ;;
+    q) DAILY_QUOTA="${OPTARG}"
+    ;;
+    esac
+done
+
+DOUBLE_QUOTA=$((DAILY_QUOTA*2))
 IF_POST="https://maker.ifttt.com/trigger/bandwidth_alert/with/key/${IFKEY}"
 
 #ignore if we are in MiB, doesn't handle TiB yet
 if [ "${LABEL}" == "GiB" ]; then
+
+   if [ "${LABEL}" == "TiB" ]; then
+     VALUE="HOLY SCHNIKES BATMAN! You are in ${LABEL} territory"
+   fi
 
    #uh oh we are over quota
    if [ "${NUMBER}" -gt "${DAILY_QUOTA}" ]; then
@@ -30,7 +45,7 @@ if [ "${LABEL}" == "GiB" ]; then
 
    #ALERT!
    if [ ! -z "${VALUE}" ]; then
-	/usr/local/bin/curl -i -H "Content-Type: application/json" \
-	    -X POST --data "{\"value1\" : \"${VALUE}\"}" "${IF_POST}"
+	 /usr/local/bin/curl -i -H "Content-Type: application/json" \
+	     -X POST --data "{\"value1\" : \"${VALUE}\"}" "${IF_POST}"
    fi
 fi #end GB check
