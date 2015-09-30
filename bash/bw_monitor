@@ -10,6 +10,8 @@
 NUMBER=$(vnstat -i em0 -s | awk '/today/ {print $(NF-1)}')
 LABEL=$(vnstat -i em0 -s | awk '/today/ {print $NF}')
 DAILY_QUOTA=6
+STATE="/var/tmp/bw_monitor.alert"
+DOUBLE_STATE="/var/tmp/bw_monitor.double.alert"
 
 # you need to setup a ifttt recipe to take this event and create an 
 # email or notification
@@ -28,6 +30,8 @@ done
 DOUBLE_QUOTA=$((DAILY_QUOTA*2))
 IF_POST="https://maker.ifttt.com/trigger/bandwidth_alert/with/key/${IFKEY}"
 
+find /var/tmp/ -name bw_monitor\* -ctime -1 -exec rm -rf {} \;
+
 #ignore if we are in MiB, doesn't handle TiB yet
 if [ "${LABEL}" == "GiB" ]; then
 
@@ -36,13 +40,15 @@ if [ "${LABEL}" == "GiB" ]; then
    fi
 
    #uh oh we are over quota
-   if [ "${NUMBER}" -gt "${DAILY_QUOTA}" ]; then
+   if [ "${NUMBER}" -gt "${DAILY_QUOTA}" ] && [ ! -e "${STATE}" ]; then
         VALUE="You have exceeded your daily bandwidth quota (${NUMBER} GB)"
+        touch "${STATE}"
    fi
 
    #uh oh we are double over quota!!
-   if [ "${NUMBER}" -gt "${DOUBLE_QUOTA}" ]; then
+   if [ "${NUMBER}" -gt "${DOUBLE_QUOTA}" ] && [ ! -e "${DOUBLE_STATE}"]; then
         VALUE="You have exceeded twice your daily bandwidth quota (${NUMBER} GB)"
+        touch "${DOUBLE_STATE}"
    fi
 
    #ALERT!
