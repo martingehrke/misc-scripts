@@ -1,11 +1,11 @@
 #!/bin/env python
 # calcaulate the entropy of a string
 # include helpful info and time to crack
+# wikipedia entry for future reference
+#  https://en.wikipedia.org/wiki/Password_strength#Entropy_as_a_measure_of_password_strength
 
 import argparse
 import sys
-
-
 
 
 def main(argv=None):
