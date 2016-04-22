@@ -5,38 +5,54 @@
 
 import nest_thermostat
 import influxdb
+import argparse
+import sys
+#import urllib3
 
-with open("/home/martin/configs/nest.txt") as f:
-    credentials = [x.strip().split(" ") for x in f.readlines()]
+#urllib3.disable_warnings()
 
-nest = nest_thermostat.Nest(credentials[0][0], credentials[0][1], index=0, units="F")
-nest.login()
-nest.get_status()
+def main(argv=None):
 
-temp = nest.temp_out(nest.status["shared"][nest.serial]["current_temperature"])
-mode = nest.status["shared"][nest.serial]["target_temperature_type"]
-target = nest.temp_out(nest.status["shared"][nest.serial]["target_temperature"])
+    parser = argparse.ArgumentParser()
 
-from influxdb import client as influxdb
-db = influxdb.InfluxDBClient("localhost", 8086, "root", "root", "test")
+    parser.add_argument("-c", "--credentials", action='store',
+                        help='file to read for nest credentials',
+                        required=True, type=str, dest='cred_file')
 
-data = [
-    {
-        "measurement": "temperature",
-        "tags": { "device": "nest", "location": "indoor", "type": "current" },
-        "fields": { "value": temp }
-    },
-    {
-        "measurement":"temperature",
-        "fields": { "value": target },
-        "tags": { "location": "indoor", "type":"target", "device":"nest" },
-    },
-    {
-        "measurement":"mode",
-        "fields": { "value": mode },
-        "tags": { "location": "indoor", "type":"mode", "device":"nest" },
-  },
-]
+    args = parser.parse_args(argv[1:])
 
-    
-db.write_points(data)
+    with open(args.cred_file) as f:
+        credentials = [x.strip().split(" ") for x in f.readlines()]
+
+    nest = nest_thermostat.Nest(credentials[0][0], credentials[0][1], index=0, units="F")
+    nest.login()
+    nest.get_status()
+
+    temp = nest.temp_out(nest.status["shared"][nest.serial]["current_temperature"])
+    mode = nest.status["shared"][nest.serial]["target_temperature_type"]
+    target = nest.temp_out(nest.status["shared"][nest.serial]["target_temperature"])
+
+    db = influxdb.InfluxDBClient("localhost", 8086, "root", "root", "test")
+
+    data = [
+        {
+            "measurement": "temperature",
+            "tags": { "device": "nest", "location": "indoor", "type": "current" },
+            "fields": { "value": temp }
+        },
+        {
+            "measurement":"temperature",
+            "fields": { "value": target },
+            "tags": { "location": "indoor", "type":"target", "device":"nest" },
+        },
+        {
+            "measurement":"mode",
+            "fields": { "value": mode },
+            "tags": { "location": "indoor", "type":"mode", "device":"nest" },
+      },
+    ]
+
+    db.write_points(data)
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
