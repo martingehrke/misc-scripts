@@ -21,7 +21,7 @@ def runSpeedTest(server=None):
     if server==None:
         SPEEDTEST_CMD_LINE = SPEEDTEST_CMD + ' --simple'
     else:
-        SPEEDTEST_CMD_LINE = SPEEDTEST_CMD + ' --simple' + ' --server ' + server
+        SPEEDTEST_CMD_LINE = SPEEDTEST_CMD + ' --simple' + ' --server ' + str(server)
 
     with os.popen(SPEEDTEST_CMD_LINE) as speedtest_output:
 
@@ -41,25 +41,28 @@ def runSpeedTest(server=None):
 
 def main(argv=None):
 
-        ping, download, upload = runSpeedTest()
+        server_id = 5713
+        server_loc = "Armstrong (Butler, PA, United States)"
+
+        ping, download, upload = runSpeedTest(server_id)
 
         db = influxdb.InfluxDBClient("localhost", 8086, "root", "root", "test")
 
         data = [
             {
                 "measurement": "upload",
-                "tags": { "device": "nest" },
-                "fields": { "value": upload }
+                "fields": { "value": upload },
+                "tags": { "server_id": server_id, "server_loc": server_loc }
             },
             {
                 "measurement":"download",
                 "fields": { "value": download },
-                "tags": { "location": "indoor" },
+                "tags": { "server_id": server_id, "server_loc": server_loc }
             },
             {
                 "measurement":"ping",
                 "fields": { "value": ping },
-                "tags": { "location": "indoor" },
+                "tags": { "server_id": server_id, "server_loc": server_loc }
           },
         ]
 
