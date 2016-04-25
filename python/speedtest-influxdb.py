@@ -52,17 +52,17 @@ def main(argv=None):
             {
                 "measurement": "upload",
                 "fields": { "value": upload },
-                "tags": { "server_id": server_id, "server_loc": server_loc }
+                "tags": { "server_id": server_id }
             },
             {
                 "measurement":"download",
                 "fields": { "value": download },
-                "tags": { "server_id": server_id, "server_loc": server_loc }
+                "tags": { "server_id": server_id }
             },
             {
                 "measurement":"ping",
                 "fields": { "value": ping },
-                "tags": { "server_id": server_id, "server_loc": server_loc }
+                "tags": { "server_id": server_id }
           },
         ]
 
