@@ -7,9 +7,6 @@ import nest_thermostat
 import influxdb
 import argparse
 import sys
-#import urllib3
-
-#urllib3.disable_warnings()
 
 def main(argv=None):
 
@@ -32,7 +29,7 @@ def main(argv=None):
     mode = nest.status["shared"][nest.serial]["target_temperature_type"]
     target = nest.temp_out(nest.status["shared"][nest.serial]["target_temperature"])
 
-    db = influxdb.InfluxDBClient("localhost", 8086, "root", "root", "test")
+    db = influxdb.InfluxDBClient("localhost", 8086, "root", "root", "climate")
 
     data = [
         {
