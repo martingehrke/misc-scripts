@@ -14,7 +14,7 @@ def main(argv=None):
 	#convert temp to F
 	temperature = temperature * 9/5.0 + 32
 
-        db = influxdb.InfluxDBClient("192.168.1.105", 8086, "root", "root", "test")
+        db = influxdb.InfluxDBClient("192.168.1.105", 8086, "root", "root", "climate")
 
         data = [
             {
@@ -29,7 +29,11 @@ def main(argv=None):
             },
         ]
 
-        db.write_points(data)
+	if humidity is not None and temperature is not None:
+            db.write_points(data)
+	else:
+	    print('Failed to get reading. Try again!')
+	    sys.exit(1)
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
