@@ -1,0 +1,10 @@
+#!/bin/bash
+
+influxd backup -database bandwidth ./bandwidth
+remote_basedir="/media/networkshares/H/BACKUPS/influxdb"
+
+for db in bandwidth climate telegraf; 
+do
+    rm -rf ${remote_basedir}/${db}
+    /usr/bin/influxd backup -database ${db} ${remote_basedir}/${db}
+done
